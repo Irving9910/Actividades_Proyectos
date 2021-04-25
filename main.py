@@ -43,7 +43,7 @@ for filename in os.listdir(filesPath):
                     if char == "<":
                         putIt = False
                     elif (char != '<') and (putIt == True):
-                        if char.isalpha() or char.isspace():
+                        if char.isalpha() or char.isspace() and char != "\t":
                             newFile.write(char)
                     elif char == ">":
                         putIt = True
@@ -65,6 +65,7 @@ for filename in os.listdir(noHTMLPath):
             words = line.split(" ")
 
             for word in words:
+                word.lstrip()
                 if word in diccionario:
                     #Añadir una repeticion
                     diccionario[word][0] = diccionario[word][0] + 1
@@ -80,7 +81,7 @@ for filename in os.listdir(noHTMLPath):
                     #La palabra no existe en el diccionario, por lo tanto agregarla
                     diccionario[word] = [1, 1]
     lastPath = filename
-    
+
 #Escribir en un nuevo documento todas las palabras, su numero de repeticiones y en cuantos documentos se repitieron:
 with io.open(tokenized + "tokenized.txt", 'w', encoding="utf-8") as newFile:
     for key in sorted(diccionario.keys()):
