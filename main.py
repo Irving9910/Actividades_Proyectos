@@ -1,12 +1,20 @@
 import os
+import io
 import time
+import re
 
 exeTimeStart = time.perf_counter()
 # Matricula de alumno
 matricula = "2728638"
 # Ruta donde se tienen los archivos
-filesPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\Files"
-logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML"
+#filesPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\Files"
+#logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML"
+
+#MIKE'S PATH
+filesPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\Files\\";
+logPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML";
+noHTMLPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\noHTML\\";
+alphaOrder = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\alphaOrder\\";
 
 # Borra log.txt
 if os.path.exists(os.path.join(logPath, "a1_"+matricula+".txt")):
@@ -24,10 +32,35 @@ for filename in os.listdir(filesPath):
 
 # Abre los archivos concatenando la varianble filesPath + el nombre del file en iteración
     oneFileTimeStart = time.perf_counter()
-    with open(os.path.join(filesPath, filename), 'r') as f:
-        oneFileTimeEnd = time.perf_counter()
-        log.write(os.path.join(filesPath, filename) + f"  {oneFileTimeEnd - oneFileTimeStart:0.4f} segundos" + "\n")
+    with open(os.path.join(filesPath, filename), 'r',encoding='utf-8', errors='ignore') as f:
 
+        #Crear nuevo archivo
+        with io.open(noHTMLPath+filename, 'w',encoding="utf-8") as newFile:
+            putIt = None
+            #Leer linea por linea
+            for line in f:
+                    newLine = re.sub("\s\s+", " ", line)
+                    for char in newLine:
+                            if char == "<":
+                                putIt = False
+                            elif (char != '<') and (putIt == True):
+                                if char.isalpha() or char.isspace():
+                                    newFile.write(char)
+                            elif char == ">":
+                                putIt = True
+
+
+            oneFileTimeEnd = time.perf_counter()
+            log.write(os.path.join(filesPath, filename) + f"  {oneFileTimeEnd - oneFileTimeStart:0.4f} segundos" + "\n")
+        newFile.close()
+    f.close()
+
+#Ordener las palabras alfabeticamente y eliminar repetidas
+for filename in os.listdir(noHTMLPath):
+    with open(os.path.join(noHTMLPath, filename), 'r', encoding='utf-8', errors='ignore') as f:
+        with io.open(alphaOrder + filename, 'w', encoding="utf-8") as newFile:
+            for word in sorted(set(f.read().lower().split())):
+                newFile.write(word+"\n")
 
 # Termina cronometro de apertura de files
 filesTimeEnd = time.perf_counter()
