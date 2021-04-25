@@ -55,12 +55,25 @@ for filename in os.listdir(filesPath):
         newFile.close()
     f.close()
 
-#Ordener las palabras alfabeticamente y eliminar repetidas
+#Ordener las palabras alfabeticamente y contar las repetidas
 for filename in os.listdir(noHTMLPath):
+    diccionario = dict()
     with open(os.path.join(noHTMLPath, filename), 'r', encoding='utf-8', errors='ignore') as f:
         with io.open(alphaOrder + filename, 'w', encoding="utf-8") as newFile:
-            for word in sorted(set(f.read().lower().split())):
-                newFile.write(word+"\n")
+            for line in f:
+                line = line.strip()
+                line = line.lower()
+                words = line.split(" ")
+
+                for word in words:
+                    if word in diccionario:
+                        diccionario[word] = diccionario[word] + 1
+                    else:
+                        diccionario[word] = 1
+
+            for key in sorted(diccionario.keys()):
+                wordListed = key+" : "+str(diccionario[key])
+                newFile.write(wordListed+"\n")
 
 # Termina cronometro de apertura de files
 filesTimeEnd = time.perf_counter()
