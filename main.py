@@ -17,6 +17,8 @@ logPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML";
 noHTMLPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\noHTML\\";
 #alphaOrder = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\alphaOrder\\";
 tokenized = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\tokenized\\"
+stoplistFile = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\StopList.txt"
+
 # Borra log.txt
 if os.path.exists(os.path.join(logPath, "a1_" + matricula + ".txt")):
     os.remove(os.path.join(logPath, "a1_" + matricula + ".txt"))
@@ -54,12 +56,21 @@ for filename in os.listdir(filesPath):
         newFile.close()
     f.close()
 
+stopList = []
+
+#Archivo de STOPLIST
+with open(stoplistFile, 'r', encoding='utf-8', errors='ignore') as stopListFile:
+    for line in stopListFile:
+        line = line.strip("\n")
+        stopList.append(line)
+
 diccionario = dict()
 diccionario = []
 
 diccionarioGeneral = dict()
 diccionarioGeneral = []
 lastPath = None
+
 # Ordener las palabras alfabeticamente y contar las repetidas
 for filename in os.listdir(noHTMLPath):
     diccionario = []
@@ -70,21 +81,27 @@ for filename in os.listdir(noHTMLPath):
             words = line.split(" ")
 
             for word in words:
-                word.lstrip()
-                match = any(item.get('path', "NONE") == filename and item.get('palabra', "NONE PALABRA") == word for item in diccionario)
+                if not word in stopList and len(word)>1:
+                    word.lstrip()
+                    match = any(item.get('path', "NONE") == filename and item.get('palabra', "NONE PALABRA") == word for item in diccionario)
 
-                if match:
-                    matchPalabra = next(l for l in diccionario if l['path'] == filename and l["palabra"] == word)
-                    matchPalabra["repeticiones"] = matchPalabra["repeticiones"] + 1
+                    if match:
+                        matchPalabra = next(l for l in diccionario if l['path'] == filename and l["palabra"] == word)
+                        matchPalabra["repeticiones"] = matchPalabra["repeticiones"] + 1
 
-                else:
-                    diccionario.append({"path": filename, "repeticiones": 1, "palabra": word})
+                    else:
+                        diccionario.append({"path": filename, "repeticiones": 1, "palabra": word})
     diccionarioGeneral.extend(diccionario)
     lastPath = filename
 
+#Ordenar alfabeticamente
+diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
+
+#Quitar las palabras que tengan menos de 10 repeticiones
+diccionarioGeneral = [d for d in diccionarioGeneral if d['repeticiones'] > 10]
+
 #Escribir el archivo de posting
 with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
-    diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
     indice = 1
     for index in range(len(diccionarioGeneral)):
         if not len(diccionarioGeneral[index].get('palabra')) == 0:
@@ -92,14 +109,14 @@ with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
             #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
             newFile.write(str(indice)+". " + str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
             indice += 1
-            
+
 #Escribir el diccionario
 with io.open(tokenized + "diccionario.txt", 'w', encoding="utf-8") as newFile:
     indice = 1
     signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key = lambda i: (i['palabra'])) if k.get('palabra'))
     for (palabra, documentos) in sorted(signs.most_common()):
-        newFile.write(palabra+" || "+str(documentos)+" || "+ str(indice) +"\n")
-        indice += documentos
+            newFile.write(palabra+" || "+str(documentos)+" || "+ str(indice) +"\n")
+            indice += documentos
 
 # Termina cronometro de apertura de files
 filesTimeEnd = time.perf_counter()
