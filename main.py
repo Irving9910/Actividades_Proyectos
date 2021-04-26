@@ -2,6 +2,7 @@ import os
 import io
 import time
 import re
+from collections import Counter
 
 exeTimeStart = time.perf_counter()
 # Matricula de alumno
@@ -54,10 +55,14 @@ for filename in os.listdir(filesPath):
     f.close()
 
 diccionario = dict()
+diccionario = []
+
+diccionarioGeneral = dict()
+diccionarioGeneral = []
 lastPath = None
 # Ordener las palabras alfabeticamente y contar las repetidas
 for filename in os.listdir(noHTMLPath):
-    diccionarioAuxiliar = dict()
+    diccionario = []
     with open(os.path.join(noHTMLPath, filename), 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
@@ -66,28 +71,35 @@ for filename in os.listdir(noHTMLPath):
 
             for word in words:
                 word.lstrip()
-                if word in diccionario:
-                    #Añadir una repeticion
-                    diccionario[word][0] = diccionario[word][0] + 1
+                match = any(item.get('path', "NONE") == filename and item.get('palabra', "NONE PALABRA") == word for item in diccionario)
 
-                    #Si la palabra no está en el diccionario auxiliar, significa que estamos en otro documento y por lo tanto se necesita agregar +1 al campo de documentos
-                    if not word in diccionarioAuxiliar:
-                        diccionario[word][1] = diccionario[word][1] + 1
+                if match:
+                    matchPalabra = next(l for l in diccionario if l['path'] == filename and l["palabra"] == word)
+                    matchPalabra["repeticiones"] = matchPalabra["repeticiones"] + 1
 
-                    #Agregar la palabra al diccionario auxiliar para que no vuelva a entrar al punto anterior si es el mismo documento
-                    if lastPath != filename:
-                        diccionarioAuxiliar[word] = True
                 else:
-                    #La palabra no existe en el diccionario, por lo tanto agregarla
-                    diccionario[word] = [1, 1]
+                    diccionario.append({"path": filename, "repeticiones": 1, "palabra": word})
+    diccionarioGeneral.extend(diccionario)
     lastPath = filename
 
-#Escribir en un nuevo documento todas las palabras, su numero de repeticiones y en cuantos documentos se repitieron:
-with io.open(tokenized + "tokenized.txt", 'w', encoding="utf-8") as newFile:
-    for key in sorted(diccionario.keys()):
-        # palabra ; #repeticiones ; #documentos
-        wordListed = key + " ; " + str(diccionario[key][0]) + " ; " + str(diccionario[key][1]);
-        newFile.write(wordListed + "\n")
+#Escribir el archivo de posting
+with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
+    diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
+    indice = 1
+    for index in range(len(diccionarioGeneral)):
+        if not len(diccionarioGeneral[index].get('palabra')) == 0:
+            #Linea por si queremos checar que letra es
+            #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
+            newFile.write(str(indice)+". " + str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
+            indice += 1
+            
+#Escribir el diccionario
+with io.open(tokenized + "diccionario.txt", 'w', encoding="utf-8") as newFile:
+    indice = 1
+    signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key = lambda i: (i['palabra'])) if k.get('palabra'))
+    for (palabra, documentos) in sorted(signs.most_common()):
+        newFile.write(palabra+" || "+str(documentos)+" || "+ str(indice) +"\n")
+        indice += documentos
 
 # Termina cronometro de apertura de files
 filesTimeEnd = time.perf_counter()
