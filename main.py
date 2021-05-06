@@ -3,6 +3,15 @@ import io
 import time
 import re
 from collections import Counter
+import sys
+
+method = str(sys.argv[1])
+inputPath = str(sys.argv[2])
+outputPath = str(sys.argv[3])
+
+if method not in ['tokenize', 'posting']:
+    print(method)
+    sys.exit()
 
 exeTimeStart = time.perf_counter()
 # Matricula de alumno
@@ -12,12 +21,12 @@ matricula = "2728638"
 # logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML"
 
 # MIKE'S PATH
-filesPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\\\Files";
-logPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\";
-noHTMLPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\\\noHTML\\";
+filesPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\Files"
+logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\"
+noHTMLPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\noHTML\\"
 #alphaOrder = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\alphaOrder\\";
-tokenized = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\\\tokenized\\"
-stoplistFile = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\\\StopList.txt"
+tokenized = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\tokenized\\"
+stoplistFile = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\StopList.txt"
 
 # Borra log.txt
 if os.path.exists(os.path.join(logPath, "a1_" + matricula + ".txt")):
@@ -58,7 +67,8 @@ for filename in os.listdir(filesPath):
 
 stopList = []
 
-#Archivo de STOPLIST
+# Archivo de STOPLIST
+print("Stop List")
 with open(stoplistFile, 'r', encoding='utf-8', errors='ignore') as stopListFile:
     for line in stopListFile:
         line = line.strip("\n")
@@ -72,6 +82,7 @@ diccionarioGeneral = []
 lastPath = None
 
 # Ordener las palabras alfabeticamente y contar las repetidas
+print("Ordenando palabras y contando repetidas")
 for filename in os.listdir(noHTMLPath):
     diccionario = []
     with open(os.path.join(noHTMLPath, filename), 'r', encoding='utf-8', errors='ignore') as f:
@@ -94,35 +105,46 @@ for filename in os.listdir(noHTMLPath):
     diccionarioGeneral.extend(diccionario)
     lastPath = filename
 
-#Ordenar alfabeticamente
+# Ordenar alfabeticamente
 diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
 
-#Quitar las palabras que tengan menos de 10 repeticiones
+# Quitar las palabras que tengan menos de 10 repeticiones
 diccionarioGeneral = [d for d in diccionarioGeneral if d['repeticiones'] > 10]
 
-signs = []
 
-#Escribir el diccionario
-with io.open(tokenized + "diccionario.txt", 'w', encoding="utf-8") as newFile:
-    index = 1
-    indice = 1
-    signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key = lambda i: (i['palabra'])) if k.get('palabra'))
-    for (palabra, documentos) in sorted(signs.most_common()):
+def diccionariofunc():
+    print("Ejecutando diccionario")
+    # Escribir el diccionario
+    with io.open(tokenized + "diccionario.txt", 'w', encoding="utf-8") as newFile:
+        index = 1
+        indice = 1
+        signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key=lambda i: (i['palabra'])) if k.get('palabra'))
+        for (palabra, documentos) in sorted(signs.most_common()):
             newFile.write(str(index) + ".- " + palabra+" || "+str(documentos)+" || " + str(indice) + "\n")
             indice += documentos
             index+= 1
 
 
-#Escribir el archivo de posting
-with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
-    indice = 1
-    for index in range(len(diccionarioGeneral)):
-        if not len(diccionarioGeneral[index].get('palabra')) == 0:
-            #Linea por si queremos checar que letra es
-            #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
-            newFile.write(str(indice)+". " + str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "||" + str((diccionarioGeneral[index].get('repeticiones')*100)/signs[diccionarioGeneral[index].get('palabra')]) + "\n" )
-            indice += 1
+def postingfunc():
+    print("Ejecutando posting")
+    # Escribir el archivo de posting
+    with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
+        indice = 1
+        for index in range(len(diccionarioGeneral)):
+            if not len(diccionarioGeneral[index].get('palabra')) == 0:
+                #Linea por si queremos checar que letra es
+                #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
+                newFile.write(str(indice)+". " + str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "||" + str((diccionarioGeneral[index].get('repeticiones')*100)/signs[diccionarioGeneral[index].get('palabra')]) + "\n" )
+                indice += 1
 
+
+if method == "tokenize":
+    diccionariofunc()
+elif method == "index":
+    postingfunc()
+else:
+    print("No funca")
+    sys.exit()
 
 
 # Termina cronometro de apertura de files
