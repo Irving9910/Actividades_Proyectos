@@ -9,31 +9,36 @@ method = str(sys.argv[1])
 inputPath = str(sys.argv[2])
 outputPath = str(sys.argv[3])
 
-if method not in ['tokenize', 'posting']:
+if method not in ['tokenize', 'index']:
     print(method)
     sys.exit()
 
-exeTimeStart = time.perf_counter()
+
 # Matricula de alumno
 matricula = "2728638"
 # Ruta donde se tienen los archivos
+# Files Path Irving
 # filesPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\Files"
+# Tokenized Irving
+# tokenized = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\tokenized\\"
 # logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML"
 
+# Path to CS13309_Archivos_HTML
+htmlPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\"
+
 # MIKE'S PATH
-filesPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\Files"
-logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\"
-noHTMLPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\noHTML\\"
+filesPath = htmlPath + inputPath
+logPath = htmlPath
+noHTMLPath = htmlPath + "noHTML\\"
 #alphaOrder = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\alphaOrder\\";
-tokenized = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\tokenized\\"
-stoplistFile = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\StopList.txt"
+tokenized = htmlPath + outputPath + "\\"
+stoplistFile = htmlPath + "StopList.txt"
 
 # Borra log.txt
 if os.path.exists(os.path.join(logPath, "a1_" + matricula + ".txt")):
     os.remove(os.path.join(logPath, "a1_" + matricula + ".txt"))
 
 # Comienza cronometro de apertura de files
-filesTimeStart = time.perf_counter()
 
 # Crear el log de tiempo
 log = open(os.path.join(logPath, "a1_" + matricula + ".txt"), "a")
@@ -61,7 +66,6 @@ for filename in os.listdir(filesPath):
                         putIt = True
 
             oneFileTimeEnd = time.perf_counter()
-            log.write(os.path.join(filesPath, filename) + f"  {oneFileTimeEnd - oneFileTimeStart:0.4f} segundos" + "\n")
         newFile.close()
     f.close()
 
@@ -111,21 +115,30 @@ diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
 # Quitar las palabras que tengan menos de 10 repeticiones
 diccionarioGeneral = [d for d in diccionarioGeneral if d['repeticiones'] > 10]
 
+signs = []
+signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key=lambda i: (i['palabra'])) if k.get('palabra'))
+
+exeTimeStart = 0
+exeTimeEnd = 0
 
 def diccionariofunc():
+    exeTimeStart = time.perf_counter()
     print("Ejecutando diccionario")
     # Escribir el diccionario
     with io.open(tokenized + "diccionario.txt", 'w', encoding="utf-8") as newFile:
         index = 1
         indice = 1
-        signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key=lambda i: (i['palabra'])) if k.get('palabra'))
         for (palabra, documentos) in sorted(signs.most_common()):
             newFile.write(str(index) + ".- " + palabra+" || "+str(documentos)+" || " + str(indice) + "\n")
             indice += documentos
             index+= 1
 
+    exeTimeEnd = time.perf_counter()
+    log.write(f"\nTiempo total de ejecución {exeTimeEnd - exeTimeStart:0.4f} segundos\n")
+
 
 def postingfunc():
+    exeTimeStart = time.perf_counter()
     print("Ejecutando posting")
     # Escribir el archivo de posting
     with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
@@ -136,6 +149,8 @@ def postingfunc():
                 #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
                 newFile.write(str(indice)+". " + str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "||" + str((diccionarioGeneral[index].get('repeticiones')*100)/signs[diccionarioGeneral[index].get('palabra')]) + "\n" )
                 indice += 1
+    exeTimeEnd = time.perf_counter()
+    log.write(f"\nTiempo total de ejecución {exeTimeEnd - exeTimeStart:0.4f} segundos\n")
 
 
 if method == "tokenize":
@@ -146,11 +161,3 @@ else:
     print("No funca")
     sys.exit()
 
-
-# Termina cronometro de apertura de files
-filesTimeEnd = time.perf_counter()
-
-log.write(f"\nTiempo total de abrir archivos {filesTimeEnd - filesTimeStart:0.4f} segundos\n")
-
-exeTimeEnd = time.perf_counter()
-log.write(f"\nTiempo total de ejecución {exeTimeEnd - exeTimeStart:0.4f} segundos\n")
