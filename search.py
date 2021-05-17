@@ -5,14 +5,9 @@ import re
 from collections import Counter
 import sys
 
-method = str(sys.argv[1])
+palabraBuscar = str(sys.argv[1]).lower()
 inputPath = str(sys.argv[2])
 outputPath = str(sys.argv[3])
-
-if method not in ['tokenize', 'index']:
-    print(method)
-    sys.exit()
-
 
 # Matricula de alumno
 matricula = "2728638"
@@ -79,19 +74,15 @@ for filename in os.listdir(filesPath):
 
 stopList = []
 
-# Archivo de STOPLIST
-print("Stop List")
-with open(stoplistFile, 'r', encoding='utf-8', errors='ignore') as stopListFile:
-    for line in stopListFile:
-        line = line.strip("\n")
-        stopList.append(line)
-
 diccionario = dict()
 diccionario = []
 
 diccionarioGeneral = dict()
 diccionarioGeneral = []
 lastPath = None
+
+listaPalabras = []
+
 
 # Ordener las palabras alfabeticamente y contar las repetidas
 print("Ordenando palabras y contando repetidas")
@@ -104,7 +95,7 @@ for filename in os.listdir(noHTMLPath):
             words = line.split(" ")
 
             for word in words:
-                if not word in stopList and len(word)>1:
+                if len(word)>1:
                     word.lstrip()
                     match = any(item.get('path', "NONE") == filename and item.get('palabra', "NONE PALABRA") == word for item in diccionario)
 
@@ -114,62 +105,29 @@ for filename in os.listdir(noHTMLPath):
 
                     else:
                         diccionario.append({"path": filename, "repeticiones": 1, "palabra": word})
+
+        for index in range(len(diccionario)):
+            if diccionario[index].get('palabra') == str(palabraBuscar):
+                listaPalabras.append(diccionario[index].get('path'))
+                break
+
     diccionarioGeneral.extend(diccionario)
     lastPath = filename
 
-# Ordenar alfabeticamente
-diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
 
-# Quitar las palabras que tengan menos de 10 repeticiones
-#diccionarioGeneral = [d for d in diccionarioGeneral if d['repeticiones'] > 10]
-
-signs = []
-signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key=lambda i: (i['palabra'])) if k.get('palabra'))
-
-exeTimeStart = 0
-exeTimeEnd = 0
-
-def documentfunc():
-    with io.open(tokenized + "documents.txt", 'w', encoding="utf-8") as docFile:
-        for key, value in diccionarioDocumentos.items():
-            docFile.write(str(value) + ".     " + str(key) + "\n")
-
-def diccionariofunc():
+def retrievefunc():
     exeTimeStart = time.perf_counter()
-    print("Ejecutando diccionario")
-    # Escribir el diccionario
-    with io.open(tokenized + "diccionario.txt", 'w', encoding="utf-8") as newFile:
-        index = 1
-        indice = 1
-        for (palabra, documentos) in sorted(signs.most_common()):
-            newFile.write(str(index) + ".- " + palabra+" || "+str(documentos)+" || " + str(indice) + "\n")
-            indice += documentos
-            index+= 1
-
-    exeTimeEnd = time.perf_counter()
-    log.write(f"\nTiempo total de ejecución {exeTimeEnd - exeTimeStart:0.4f} segundos\n")
-
-
-def postingfunc():
-    exeTimeStart = time.perf_counter()
-    print("Ejecutando posting")
+    index = 1
+    print("Ejecutando Retrieve Document" )
     # Escribir el archivo de posting
-    with io.open(tokenized + "posting.txt", 'w', encoding="utf-8") as newFile:
-        indice = 1
-        for index in range(len(diccionarioGeneral)):
-            if not len(diccionarioGeneral[index].get('palabra')) == 0:
-                path = diccionarioGeneral[index].get('path')
-                #Linea por si queremos checar que letra es
-                #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
-                newFile.write(str(indice)+". " + str(diccionarioDocumentos.get(str(path))) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "||" + str((diccionarioGeneral[index].get('repeticiones')*100)/signs[diccionarioGeneral[index].get('palabra')]) + "\n" )
-                indice += 1
+    with io.open(tokenized + "retrieve.txt", 'w', encoding="utf-8") as newFile:
+        newFile.write("Archivos con la palabra: " + palabraBuscar + "\n")
+
+        for documento in listaPalabras:
+            newFile.write(str(index) + ".     " + documento + "\n")
+            index += 1
+
     exeTimeEnd = time.perf_counter()
     log.write(f"\nTiempo total de ejecución {exeTimeEnd - exeTimeStart:0.4f} segundos\n")
 
-
-if method == "tokenize":
-    diccionariofunc()
-elif method == "index":
-    postingfunc()
-    documentfunc()
-
+retrievefunc()
