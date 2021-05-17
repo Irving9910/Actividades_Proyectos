@@ -24,7 +24,7 @@ matricula = "2728638"
 # logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML"
 
 # Path to CS13309_Archivos_HTML
-htmlPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\"
+htmlPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\"
 
 # MIKE'S PATH
 filesPath = htmlPath + inputPath
@@ -43,12 +43,20 @@ if os.path.exists(os.path.join(logPath, "a1_" + matricula + ".txt")):
 # Crear el log de tiempo
 log = open(os.path.join(logPath, "a1_" + matricula + ".txt"), "a")
 
+#Obtener los nombres de los archivos
+diccionarioDocumentos = dict()
+indexName = 1
+
 # Itera para obtener los nombres de los archivos dentro de la carpeta Files
 for filename in os.listdir(filesPath):
+    diccionarioDocumentos[filename] = indexName
+    indexName += 1
 
     # Abre los archivos concatenando la varianble filesPath + el nombre del file en iteración
     oneFileTimeStart = time.perf_counter()
     with open(os.path.join(filesPath, filename), 'r', encoding='utf-8', errors='ignore') as f:
+
+
 
         # Crear nuevo archivo
         with io.open(noHTMLPath + filename, 'w', encoding="utf-8") as newFile:
@@ -121,6 +129,11 @@ signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key=lambda i: (
 exeTimeStart = 0
 exeTimeEnd = 0
 
+def documentfunc():
+    with io.open(tokenized + "documents.txt", 'w', encoding="utf-8") as docFile:
+        for key, value in diccionarioDocumentos.items():
+            docFile.write(str(value) + ".     " + str(key) + "\n")
+
 def diccionariofunc():
     exeTimeStart = time.perf_counter()
     print("Ejecutando diccionario")
@@ -145,9 +158,10 @@ def postingfunc():
         indice = 1
         for index in range(len(diccionarioGeneral)):
             if not len(diccionarioGeneral[index].get('palabra')) == 0:
+                path = diccionarioGeneral[index].get('path')
                 #Linea por si queremos checar que letra es
                 #newFile.write(str(indice)+". "+diccionarioGeneral[index].get('palabra')+" || "+str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "\n")
-                newFile.write(str(indice)+". " + str(diccionarioGeneral[index].get('path')) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "||" + str((diccionarioGeneral[index].get('repeticiones')*100)/signs[diccionarioGeneral[index].get('palabra')]) + "\n" )
+                newFile.write(str(indice)+". " + str(diccionarioDocumentos.get(str(path))) + " || " + str(diccionarioGeneral[index].get('repeticiones')) + "||" + str((diccionarioGeneral[index].get('repeticiones')*100)/signs[diccionarioGeneral[index].get('palabra')]) + "\n" )
                 indice += 1
     exeTimeEnd = time.perf_counter()
     log.write(f"\nTiempo total de ejecución {exeTimeEnd - exeTimeStart:0.4f} segundos\n")
@@ -157,7 +171,5 @@ if method == "tokenize":
     diccionariofunc()
 elif method == "index":
     postingfunc()
-else:
-    print("No funca")
-    sys.exit()
+    documentfunc()
 
