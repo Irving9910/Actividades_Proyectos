@@ -121,7 +121,7 @@ for filename in os.listdir(noHTMLPath):
 diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['palabra']))
 
 # Quitar las palabras que tengan menos de 10 repeticiones
-diccionarioGeneral = [d for d in diccionarioGeneral if d['repeticiones'] > 10]
+#diccionarioGeneral = [d for d in diccionarioGeneral if d['repeticiones'] > 10]
 
 signs = []
 signs = Counter(k['palabra'] for k in sorted(diccionarioGeneral, key=lambda i: (i['palabra'])) if k.get('palabra'))
