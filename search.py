@@ -2,21 +2,22 @@ import os
 import io
 import time
 import re
-from collections import Counter
 import sys
 
-palabraBuscar = str(sys.argv[1]).lower()
-inputPath = str(sys.argv[2])
-outputPath = str(sys.argv[3])
+#python search.py Files tokenized
+
+
+inputPath = str(sys.argv[1])
+outputPath = str(sys.argv[2])
+palabraBuscar = str(sys.argv[3])
+listadoPalabraBuscar = []
+
+for i in range(3, len(sys.argv)):
+    listadoPalabraBuscar.append(sys.argv[i])
+
 
 # Matricula de alumno
 matricula = "2728638"
-# Ruta donde se tienen los archivos
-# Files Path Irving
-# filesPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\Files"
-# Tokenized Irving
-# tokenized = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML\\tokenized\\"
-# logPath = "D:\\Mis documentos\\TecMilenio\\8vo Semestre\\Proyectos\\CS13309_Archivos_HTML"
 
 # Path to CS13309_Archivos_HTML
 htmlPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\"
@@ -25,9 +26,7 @@ htmlPath = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\"
 filesPath = htmlPath + inputPath
 logPath = htmlPath
 noHTMLPath = htmlPath + "noHTML\\"
-#alphaOrder = "C:\\Users\\pez-1\\Downloads\\CS13309_Archivos_HTML\\alphaOrder\\";
 tokenized = htmlPath + outputPath + "\\"
-stoplistFile = htmlPath + "StopList.txt"
 
 # Borra log.txt
 if os.path.exists(os.path.join(logPath, "a1_" + matricula + ".txt")):
@@ -38,20 +37,12 @@ if os.path.exists(os.path.join(logPath, "a1_" + matricula + ".txt")):
 # Crear el log de tiempo
 log = open(os.path.join(logPath, "a1_" + matricula + ".txt"), "a")
 
-#Obtener los nombres de los archivos
-diccionarioDocumentos = dict()
-indexName = 1
-
 # Itera para obtener los nombres de los archivos dentro de la carpeta Files
 for filename in os.listdir(filesPath):
-    diccionarioDocumentos[filename] = indexName
-    indexName += 1
 
     # Abre los archivos concatenando la varianble filesPath + el nombre del file en iteración
     oneFileTimeStart = time.perf_counter()
     with open(os.path.join(filesPath, filename), 'r', encoding='utf-8', errors='ignore') as f:
-
-
 
         # Crear nuevo archivo
         with io.open(noHTMLPath + filename, 'w', encoding="utf-8") as newFile:
@@ -73,14 +64,9 @@ for filename in os.listdir(filesPath):
     f.close()
 
 stopList = []
-
-diccionario = dict()
 diccionario = []
-
-diccionarioGeneral = dict()
 diccionarioGeneral = []
 lastPath = None
-
 listaPalabras = []
 
 
@@ -95,7 +81,7 @@ for filename in os.listdir(noHTMLPath):
             words = line.split(" ")
 
             for word in words:
-                if len(word)>1:
+                if len(word)>1 and word in listadoPalabraBuscar:
                     word.lstrip()
                     match = any(item.get('path', "NONE") == filename and item.get('palabra', "NONE PALABRA") == word for item in diccionario)
 
@@ -114,6 +100,13 @@ for filename in os.listdir(noHTMLPath):
     diccionarioGeneral.extend(diccionario)
     lastPath = filename
 
+diccionarioGeneral = sorted(diccionarioGeneral, key = lambda i: (i['repeticiones']),  reverse=True)
+
+if(len(diccionarioGeneral)>10):
+    diccionarioGeneral = diccionarioGeneral[0:10]
+
+
+
 
 def retrievefunc():
     exeTimeStart = time.perf_counter()
@@ -121,10 +114,15 @@ def retrievefunc():
     print("Ejecutando Retrieve Document" )
     # Escribir el archivo de posting
     with io.open(tokenized + "retrieve.txt", 'w', encoding="utf-8") as newFile:
-        newFile.write("Archivos con la palabra: " + palabraBuscar + "\n")
+        newFile.write("Archivos con la(s) palabra(s): \n\n")
 
-        for documento in listaPalabras:
-            newFile.write(str(index) + ".     " + documento + "\n")
+        for word in listadoPalabraBuscar:
+            newFile.write("-"+word + "\n")
+
+        newFile.write("\nTop 10 documentos: \n")
+
+        for documento in range(len(diccionarioGeneral)):
+            newFile.write(str(index) + ".     " + diccionarioGeneral[documento].get('path') + " - "+ diccionarioGeneral[documento].get('palabra') + "\n")
             index += 1
 
     exeTimeEnd = time.perf_counter()
